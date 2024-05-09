@@ -24,11 +24,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: "null",
   },
-  address: {
-    type: String,
-    required: true,
-    default: "null",
-  },
   isAdmin: { type: Boolean, default: false },
 });
 

@@ -1,4 +1,4 @@
-var createError = require("http-errors"),
+const createError = require("http-errors"),
   express = require("express"),
   path = require("path"),
   cookieParser = require("cookie-parser"),
@@ -9,12 +9,14 @@ var createError = require("http-errors"),
   passport = require("passport"),
   MongoStore = require("connect-mongodb-session")(session),
   localStrategy = require("passport-local"),
-  User = require("./model/userScheema");
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
+  User = require("./model/userScheema"),
+  indexRouter = require("./routes/index"),
+  usersRouter = require("./routes/users"),
+  authRouter = require("./routes/auth");
 
 var app = express();
 require("dotenv").config();
+
 //* view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
@@ -30,12 +32,11 @@ app.engine(
 
 app.use(logger("dev"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-//* db config
+app.use(express.urlencoded({ extended: true }));
 
-// db config
+//* db config
 mongoose
   .connect(process.env.DB_URL, {
     dbName: "electropec",
@@ -60,13 +61,13 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 passport.use(new localStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+app.use("/auth", authRouter);
 
 // *Catch 404 and forward to error handler
 app.use(function (req, res, next) {
