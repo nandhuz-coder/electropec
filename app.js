@@ -8,12 +8,13 @@ var createError = require("http-errors"),
   mongoose = require("mongoose"),
   passport = require("passport"),
   MongoStore = require("connect-mongodb-session")(session),
-  localStrategy = require("passport-local");
+  localStrategy = require("passport-local"),
+  User = require("./model/userScheema");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 
 var app = express();
-
+require("dotenv").config();
 //* view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
@@ -32,14 +33,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-
 //* db config
+
+// db config
 mongoose
   .connect(process.env.DB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
     dbName: "electropec",
   })
   .then(() => console.log("MongoDB is connected"))
