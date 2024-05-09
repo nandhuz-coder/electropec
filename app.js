@@ -1,10 +1,14 @@
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-const hbs = require("express-handlebars");
-
+var createError = require("http-errors"),
+  express = require("express"),
+  path = require("path"),
+  cookieParser = require("cookie-parser"),
+  logger = require("morgan"),
+  hbs = require("express-handlebars"),
+  session = require("express-session"),
+  mongoose = require("mongoose"),
+  passport = require("passport"),
+  MongoStore = require("connect-mongodb-session")(session),
+  localStrategy = require("passport-local");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 
@@ -28,6 +32,40 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
+//* db config
+mongoose
+  .connect(process.env.DB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    dbName: "electropec",
+  })
+  .then(() => console.log("MongoDB is connected"))
+  .catch((error) => console.log(error));
+
+const store = new MongoStore({
+  uri: process.env.DB_URL,
+  collection: "sessions",
+  databaseName: "electropec",
+});
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: false,
+    resave: false,
+    store: store,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new localStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
